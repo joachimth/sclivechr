@@ -1,0 +1,25 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+# get pre-requisites
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+# git-fs
+. /usr/share/initramfs-tools/hook-functions
+copy_exec /sbin/git-fs
+
+# Ensure this file exists, which allows git-fs to detect it is being run
+# from initrd and set up things for systemd correctly. See also
+# https://www.freedesktop.org/wiki/Software/systemd/RootStorageDaemons/
+touch "${DESTDIR}/etc/initrd-release"

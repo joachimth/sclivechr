@@ -1,0 +1,9 @@
+f5b99b7e52aa00130ffa31644dbba1dc  usr/lib/i386-linux-gnu/libchromeXvMC.so.1.0.0
+fb1fe5686ba56831dcb88f4fdc2afb05  usr/lib/i386-linux-gnu/libchromeXvMCPro.so.1.0.0
+a5574455f529b2a92e3ca42a4855ab9a  usr/lib/xorg/modules/drivers/openchrome_drv.so
+5f76af3d591633358c157bfc3bcbebee  usr/share/doc/xserver-xorg-video-openchrome/NEWS.gz
+64e768138c0d2edbc9190ada10a23d35  usr/share/doc/xserver-xorg-video-openchrome/changelog.Debian.gz
+e29ac5c5b74467b567d4d8b1f9c04a53  usr/share/doc/xserver-xorg-video-openchrome/changelog.gz
+9bf3aab21afb07dd8ce251eb36f2ac85  usr/share/doc/xserver-xorg-video-openchrome/copyright
+b3676326cc3451e67662fe0d96664028  usr/share/lintian/overrides/xserver-xorg-video-openchrome
+c8a309d820380f88940201c3a1222745  usr/share/man/man4/openchrome.4.gz

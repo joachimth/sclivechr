@@ -1,0 +1,9 @@
+af06d2c73ab5649e52b2dd79fc21b6de  usr/bin/uufilter
+b35784ef682ccff2ec76c9ae8309b16a  usr/bin/xloadimage
+c3fc4697b50d71a2ec30c466e9bb6c27  usr/lib/mime/packages/xloadimage
+e2b4501e320a0f6c5d64a7e59f84bbbc  usr/share/doc/xloadimage/README.gz
+84fbc84fe2e04eccbd8b49ad2e9ec197  usr/share/doc/xloadimage/changelog.Debian.gz
+e6d1a63c523d765af7c076b58a617bc4  usr/share/doc/xloadimage/changelog.gz
+963b1698a7bdbb7c47e441f91592b925  usr/share/doc/xloadimage/copyright
+ac5f2f99cb040ce889226410b118b910  usr/share/man/man1/uufilter.1x.gz
+c19e3f600e51471db58769e6cc7f7d0d  usr/share/man/man1/xloadimage.1x.gz

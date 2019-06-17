@@ -1,0 +1,87 @@
+#!/bin/bash
+# reset webc after $1 minutes idle
+#
+# BUGS:
+# * Dependent on Firefox
+# * Changes on a form / scroll position on the homepage, won't reset kiosk since we are only working from homepage title
+# Perhaps look into a layer utilising https://developer.mozilla.org/en/nsIIdleService
+source "/etc/webc/functions.sh"
+source "/etc/webc/webc.conf"
+set -e
+_exit() {
+	echo "Error in ${BASH_SOURCE[1]} at line ${BASH_LINENO[0]}, exiting..."
+}
+trap _exit EXIT
+
+idle_get_timeout() {
+	minutes="$1"
+
+	timeout=$( expr $minutes \* 60 )
+	logs "Killing after $timeout idle seconds"
+	echo $timeout
+}
+
+idle_timeout_is_invalid() {
+	timeout=$1
+	test "$timeout" -lt 60 && return 0
+	test "$timeout" -gt $(( 60 * 120 )) && return 0
+	return 1
+}
+
+idle_too_long() {
+	timeout="$1"
+	sleepfor=$( expr $timeout \- $( idleseconds ) )
+	if test "$sleepfor" -gt 0
+	then
+		logs "Sleeping for $sleepfor"
+		sleep $sleepfor
+		return 1
+	fi
+	return 0
+}
+
+page_title ()
+{
+	xwininfo -root -tree | grep Navigator | grep -v '"Mozilla Firefox":' | awk -F\" '{print $2}'
+}
+
+page_get_default() {
+	title=""
+	while [[ "$title" = "" ]];do
+		sleep 1
+		title=$(page_title)
+	done
+	logs "default = '$title'"
+	echo "$title"
+}
+
+page_isnt() {
+	default="$1"
+	current="$( page_title )"
+	logs "page current '${current}' vs default '${1}'"
+	[[ "$current" != "$default" ]] && { 
+		logs "page current != default"
+		return 0
+	}
+	return 1
+}
+
+kill_X() {
+	logs "Killing X"
+	cmdline_has debug && sleep 5
+	pkill X
+}
+
+timeout=$( idle_get_timeout $1 )
+idle_timeout_is_invalid $timeout && exit
+default_page=$( page_get_default )
+while true; do
+	idle_too_long $timeout || continue
+	if page_isnt "$default_page"; then
+		kill_X
+	else
+		sleep $timeout
+	fi
+done
+	
+

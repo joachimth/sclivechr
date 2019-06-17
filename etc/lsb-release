@@ -1,0 +1,4 @@
+DISTRIB_ID="Progress Linux"
+DISTRIB_DESCRIPTION="Progress Linux 2.0 (baureo)"
+DISTRIB_RELEASE=2.0
+DISTRIB_CODENAME=baureo

@@ -1,0 +1,99 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:			 webconverger
+# Required-Start:	 $local_fs $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:	 2 3 4 5
+# Default-Stop:		 0 1 6
+# Short-Description: Webconverger Live environment setup http://webconverger.org/startup/
+### END INIT INFO
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+NAME="webconverger"
+DESC="Webconverger live environment"
+WEBCHOME=/home/webc
+
+# Ensure sound volume is 100%
+amixer -s &>/dev/null <<END
+set Master 100% unmute
+set Master Front 100% unmute
+END
+
+. /etc/webc/functions.sh
+. /etc/webc/webc.conf
+
+for x in $(cmdline)
+do
+	case $x in
+		wpa-*)
+		# http://anonscm.debian.org/viewvc/pkg-wpa/wpasupplicant/trunk/debian/README.Debian?view=markup
+		wirelesscfg="${wirelesscfg}$(/bin/busybox httpd -d "${x/=/ }")\n\t"
+		;;
+		http_proxy=*)
+		# http://developer.mozilla.org/en/docs/Mozilla_Networking_Preferences#Proxy
+		echo "http_proxy=${x#http_proxy=}" >> /etc/environment
+		export HTTP_PROXY=${x#http_proxy=}
+		export http_proxy=${HTTP_PROXY}
+		git config --system http.proxy ${HTTP_PROXY}
+
+		logger Configuring for proxy $HTTP_PROXY
+
+		url=$(echo $HTTP_PROXY | sed -e 's,http://,,' -e 's,https://,,')
+
+		# extract the user and password (if any)
+		userpass="`echo $url | grep @ | cut -d@ -f1`"
+		pass=`echo $userpass | grep : | cut -d: -f2`
+		if [ -n "$pass" ]; then
+			user=`echo $userpass | grep : | cut -d: -f1`
+		else
+			user=$userpass
+		fi
+		# echo userpass: $userpass
+		# echo user: $user
+		# echo pass: $pass
+
+		# echo userpass: $userpass
+		hostport=$(echo $url | cut -d @ -f 2)
+		# echo hostport: $hostport
+		port=`echo $hostport | grep : | cut -d: -f2`
+		if [ -n "$port" ]; then
+			host=`echo $hostport | grep : | cut -d: -f1`
+		else
+			host=$hostport
+		fi
+
+		logger Username:  $user
+		logger Password: $pass
+		logger Proxy host: $host
+		logger Proxy port: $port
+
+		echo "pref(\"network.proxy.type\", 1);"  >> $prefs
+		echo "pref(\"network.proxy.http\", \"$host\");" >> $prefs
+		echo "pref(\"network.proxy.http_port\", $port);" >> $prefs
+		echo "pref(\"network.proxy.ssl\", \"$host\");" >> $prefs
+		echo "pref(\"network.proxy.ssl_port\", $port);" >> $prefs
+		test "$user" && echo 'pref("extensions.webconverger.proxyusername", "'$user'");' >> "$prefs"
+		test "$pass" && echo 'pref("extensions.webconverger.proxypassword", "'$pass'");' >> "$prefs"
+		;;
+	esac
+done
+
+# Don't try setup wireless if there is no config or we have a working internet connection
+
+if test -z "$wirelesscfg"
+then
+	exit 0
+fi
+
+sed -i "s,wireless config,$wirelesscfg,g" /etc/network/interfaces
+
+for iface in wlan0 eth1 # for want of a better way of detecting wireless interfaces
+do
+	ping -c 1 google.com &> /dev/null && break # If the network works, don't touch it
+	/sbin/ifconfig $iface &> /dev/null || continue # if the device does not exist, skip!
+	ifup $iface &> /dev/null
+done
+
+# Try to make ${live_image} writable
+mount -o remount,rw ${live_image}

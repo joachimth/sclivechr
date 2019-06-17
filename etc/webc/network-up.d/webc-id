@@ -1,0 +1,38 @@
+#!/bin/bash
+# save the webc id to disk
+. /etc/webc/functions.sh
+. /etc/webc/webc.conf
+
+set -e
+logs "starting with pid $$"
+
+flag="/var/run/webc-id"
+test -e $flag && { 
+	logs "found flag '$flag', exiting..."
+	exit 0
+}
+touch $flag
+
+_mac() {
+	ip route | egrep '^default' | sed -nr 's/.*dev (\S+).*/\1/p' | while read eth; do
+		ip address show dev $eth | sed -nr 's/.*ether (\S+).*/\1/p' 
+	done | sed 1q
+}
+
+mac=`_mac`		
+test "$mac" || mac="unknown_mac"
+
+if test -e /sys/devices/virtual/dmi/id/product_uuid
+then
+	uuid=`cat /sys/devices/virtual/dmi/id/product_uuid`
+fi
+test "$uuid" || uuid="unknown_uuid"
+
+webc_id="${uuid};${mac}"
+echo "$webc_id" > /etc/webc/id
+chmod 644 /etc/webc/id
+
+# So we can view individual machine logs, see log=
+sed -i "s,localhost,$(cat /etc/webc/id | tr -d ":")," /etc/hosts
+
+logs "set webc id to '${webc_id}'"

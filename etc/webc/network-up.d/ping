@@ -1,0 +1,27 @@
+#!/bin/bash
+. /etc/webc/functions.sh
+. /etc/webc/webc.conf
+server="http://ping.webconverger.org/"
+sleeping=5
+
+# $device at this point does not tell us if we are running the "install version", since the rw remount happens later
+
+webcping () {
+	logger "Pinging $server"
+	wget -qO- --timeout=5 --post-data="M=$( 
+		mac_address | md5sum | awk '{print $1}'
+	)&V=${webc_version}&D=${device}&K=${kernel}" "$server"
+}
+
+lockdir=/var/run/webcping
+test -f "$lockdir" && exit 0
+touch "$lockdir"
+
+cmdline_has noping ||
+while ! webcping
+do
+
+	logger "Failed to ping $server, sleeping $sleeping seconds"
+	sleep "$sleeping"
+
+done &
